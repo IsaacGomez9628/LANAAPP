@@ -45,7 +45,7 @@ def obtener_solo_un_usuario(user_id: int):
         print ("No se encontro el usuario", e)
         raise HTTPException(status_code=500, detail=str(e))
     
-@user_router.get("/lanaapp/user", response_model=List[UserSchema], tags=["Usuarios"])
+@user_router.get("/lanaapp/user", response_model=List[UserSchemaOut], tags=["Usuarios"])
 def obtener_usuarios():
     with engine.connect() as connection:
         result = connection.execute(users.select()).fetchall()
@@ -56,20 +56,25 @@ def update_user(user_id: int, data: UserSchema):
     updated_data = data.model_dump()
     updated_data["password_hash"] = generate_password_hash(data.password, "pbkdf2:sha256:30", 30)
     del updated_data["password"]
+    
     with engine.connect() as connection:
-        result = connection.execute(
-            users.update()
-            .where(users.c.id == user_id)
-            .values(updated_data)
-        )
-        if result.rowcount == 0:
-            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+        with connection.begin():
+            result = connection.execute(
+                users.update()
+                .where(users.c.id == user_id)
+                .values(updated_data)
+            )
+            if result.rowcount == 0:
+                raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     return {"mensaje": "Usuario actualizado correctamente"}
+
 
 @user_router.delete("/lanaapp/user/{user_id}", tags=["Usuarios"])
 def delete_user(user_id: int):
     with engine.connect() as connection:
-        result = connection.execute(users.delete().where(users.c.id == user_id))
-        if result.rowcount == 0:
-            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+        with connection.begin():
+            result = connection.execute(users.delete().where(users.c.id == user_id))
+            if result.rowcount == 0:
+                raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     return {"mensaje": "Usuario eliminado correctamente"}
+

@@ -10,11 +10,11 @@ from app.schema.transaccion_schema import TransaccionSchema, TransaccionSchemaOu
 
 transaccion_router = APIRouter()
 
-@transaccion_router.get("/lanaapp/transactions/", response_model=List[TransaccionSchemaOut], tags=["Transacciones"])
+@transaccion_router.get("/lanaapp/transacciones", tags=["Transacciones"])
 def get_transacciones():
     with engine.connect() as connection:
         result = connection.execute(transacciones.select()).fetchall()
-        return result
+        return [dict(row._mapping) for row in result]
 
 @transaccion_router.post("/lanaapp/transactions/", status_code=HTTP_201_CREATED, tags=["Transacciones"])
 def create_transaccion(data: TransaccionSchema):
@@ -28,10 +28,8 @@ def get_transaccion(transaction_id: int):
     with engine.connect() as connection:
         result = connection.execute(
             transacciones.select().where(transacciones.c.id == transaction_id)
-        ).first()
-        if result is None:
-            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Transacción no encontrada")
-        return dict(result._mapping)
+        ).fetchall()
+        return [dict(row._mapping) for row in result]
 
 @transaccion_router.put("/lanaapp/transactions/{transaction_id}", tags=["Transacciones"])
 def update_transaccion(transaction_id: int, data: TransaccionSchema):
