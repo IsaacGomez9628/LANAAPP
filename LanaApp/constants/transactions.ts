@@ -34,6 +34,8 @@ export interface WeekData {
   income: number;
   expense: number;
   total: number;
+  count: number;
+  transactions: Transaction[];
 }
 
 // Categorías predefinidas

@@ -219,3 +219,16 @@ export interface MonthlyData {
   expenses: number;
   savings: number;
 }
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: Date;
+  monthlyTarget: number;
+  color: string;
+  category: string;
+  priority: "high" | "medium" | "low";
+  isActive: boolean;
+}
