@@ -7,6 +7,7 @@ from app.router.router_presupuesto import presupuesto_router
 from app.router.router_pagos_programados import pagos_router
 from app.router.router_notificaciones import notificaciones_router
 from app.router.router_categoria import categoria_router
+from app.router.router_login import login_router
 
 router = APIRouter()
 
@@ -16,3 +17,5 @@ router.include_router(presupuesto_router)
 router.include_router(pagos_router)
 router.include_router(notificaciones_router)
 router.include_router(categoria_router)
+router.include_router(login_router) 
+

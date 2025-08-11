@@ -10,40 +10,23 @@ import { useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { verticalScale } from "react-native-size-matters";
 import { Alert } from "rn-custom-alert-prompt";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// Cambia esta IP por la IP donde corre tu API
+const API_BASE_URL = "http://192.168.100.48:8000";
 
 const Login: React.FC = () => {
   const emailRef = useRef<string>("");
   const passwordRef = useRef<string>("");
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<string>("");
 
   const router = useRouter();
-
-  const checkPasswordStrength = (password: string): string => {
-    if (password.length === 0) return "";
-    if (password.length < 6) return "weak";
-    if (password.length >= 6 && password.length < 10) return "medium";
-    if (
-      password.length >= 10 &&
-      /[A-Z]/.test(password) &&
-      /[0-9]/.test(password)
-    )
-      return "strong";
-    return "medium";
-  };
-
-  const togglePasswordVisibility = (): void => {
-    setIsPasswordVisible(!isPasswordVisible);
-  };
 
   const isEmailValid = (email: string): boolean => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
   const handleSubmit = async (): Promise<void> => {
-    // Validación de contraseña
-
     if (!passwordRef.current || !emailRef.current) {
       Alert.alert({
         title: "Faltan datos",
@@ -55,18 +38,9 @@ const Login: React.FC = () => {
         confirmText: "Entendido",
       });
       return;
-    } else if (!passwordRef.current) {
-      Alert.alert({
-        title: "Faltan datos",
-        description: "Por favor, verifica tu contraseña",
-        showCancelButton: true,
-        icon: "error",
-        iconColor: colors.neutral300,
-        cancelText: "Cancelar",
-        confirmText: "Entendido",
-      });
-      return;
-    } else if (!isEmailValid(emailRef.current)) {
+    }
+
+    if (!isEmailValid(emailRef.current)) {
       Alert.alert({
         title: "Correo inválido",
         description: "Por favor, ingresa un correo válido.",
@@ -79,23 +53,49 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simular proceso de autenticación
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log('Intentando login con:', emailRef.current);
 
-      // Login exitoso
+      // Usar JSON en lugar de form-urlencoded
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({
+          email: emailRef.current.toLowerCase().trim(),
+          password: passwordRef.current,
+        }),
+      });
+
+      console.log('Status de respuesta:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Credenciales incorrectas");
+      }
+
+      const data = await response.json();
+      console.log('Respuesta exitosa:', data);
+
+      // Guardar tanto el token como los datos del usuario
+      await AsyncStorage.setItem("access_token", data.access_token);
+      await AsyncStorage.setItem("user_data", JSON.stringify(data.user));
+
       Alert.alert({
         title: "Inicio de sesión exitoso",
-        description: "Bienvenido de vuelta!",
+        description: `¡Bienvenido de vuelta, ${data.user.nombre_usuario}!`,
         icon: "success",
         confirmText: "Continuar",
+        onConfirm: () => {
+          router.push("/(tabs)");
+        },
       });
-      // Navegar al dashboard o pantalla principal
-      // router.push("/dashboard");
-      router.push("/(tabs)");
-    } catch (error) {
+
+    } catch (error: any) {
+      console.error('Error en login:', error);
       Alert.alert({
         title: "Error de login",
-        description: "Credenciales incorrectas. Intenta de nuevo.",
+        description: error.message || "Credenciales incorrectas. Intenta de nuevo.",
         icon: "error",
         confirmText: "Reintentar",
       });
@@ -141,11 +141,7 @@ const Login: React.FC = () => {
             keyboardType="email-address"
             autoCapitalize="none"
             icon={
-              <Icons.At
-                size={verticalScale(26)}
-                color={colors.neutral300}
-                weight="fill"
-              />
+              <Icons.At size={verticalScale(26)} color={colors.neutral300} weight="fill" />
             }
           />
 
@@ -154,29 +150,17 @@ const Login: React.FC = () => {
             secureTextEntry
             onChangeText={(value: string) => (passwordRef.current = value)}
             icon={
-              <Icons.Lock
-                size={verticalScale(26)}
-                color={colors.neutral300}
-                weight="fill"
-              />
+              <Icons.Lock size={verticalScale(26)} color={colors.neutral300} weight="fill" />
             }
           />
 
           <Pressable onPress={handleForgotPassword}>
-            <Typo
-              size={14}
-              color={colors.text}
-              style={styles.forgotPasswordText}
-            >
+            <Typo size={14} color={colors.text} style={styles.forgotPasswordText}>
               ¿Olvidaste tu contraseña?
             </Typo>
           </Pressable>
 
-          <Button
-            loading={isLoading}
-            onPress={handleSubmit}
-            style={{ backgroundColor: colors.primary }}
-          >
+          <Button loading={isLoading} onPress={handleSubmit} style={{ backgroundColor: colors.primary }}>
             <Typo fontWeight={"700"} color={colors.black} size={19}>
               Login
             </Typo>
