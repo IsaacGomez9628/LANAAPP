@@ -15,40 +15,66 @@ const Register: React.FC = () => {
   const emailRef = useRef<string>("");
   const passwordRef = useRef<string>("");
   const nameRef = useRef<string>("");
+  const phoneRef = useRef<string>("");
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<string>("");
 
   const router = useRouter();
 
-  const checkPasswordStrength = (password: string): string => {
-    if (password.length === 0) return "";
-    if (password.length < 6) return "weak";
-    if (password.length >= 6 && password.length < 10) return "medium";
-    if (
-      password.length >= 10 &&
-      /[A-Z]/.test(password) &&
-      /[0-9]/.test(password)
-    )
-      return "strong";
-    return "medium";
-  };
-
-  const togglePasswordVisibility = (): void => {
-    setIsPasswordVisible(!isPasswordVisible);
-  };
+  // Configuración de la API - Ajusta esta URL según tu entorno
+  const API_BASE_URL = "http://192.168.163.214:5000"; // Tu IP local
+  
+  // Tipos para la request
+  interface UserCreateRequest {
+    nombre_usuario: string;
+    email: string;
+    password: string;
+    telefono: string;
+  }
 
   const isEmailValid = (email: string): boolean => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
-  const handleSubmit = async (): Promise<void> => {
-    // Validación de contraseña
+  const isPhoneValid = (phone: string): boolean => {
+    // Validación básica de teléfono (puedes ajustarla según tus necesidades)
+    return /^\+?[\d\s\-\(\)]{10,}$/.test(phone);
+  };
 
-    if (!passwordRef.current || !emailRef.current || !nameRef.current) {
+  const createUser = async (userData: UserCreateRequest) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/lanaapp/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 422) {
+          throw new Error("Error de validación: Verifica que todos los datos sean correctos");
+        } else if (response.status === 500) {
+          throw new Error("Error interno del servidor. Por favor, intenta más tarde.");
+        } else {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Error de conexión. Verifica tu red e intenta de nuevo.");
+    }
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    // Validaciones
+    if (!nameRef.current || !emailRef.current || !passwordRef.current || !phoneRef.current) {
       Alert.alert({
         title: "Crear cuenta",
-        description: "Por favor, Llena todos los espacios faltantes",
+        description: "Por favor, llena todos los campos requeridos",
         showCancelButton: true,
         icon: "error",
         iconColor: colors.neutral300,
@@ -56,18 +82,9 @@ const Register: React.FC = () => {
         confirmText: "Entendido",
       });
       return;
-    } else if (!passwordRef.current) {
-      Alert.alert({
-        title: "Faltan datos",
-        description: "Por favor, verifica tu contraseña",
-        showCancelButton: true,
-        icon: "error",
-        iconColor: colors.neutral300,
-        cancelText: "Cancelar",
-        confirmText: "Entendido",
-      });
-      return;
-    } else if (!isEmailValid(emailRef.current)) {
+    }
+
+    if (!isEmailValid(emailRef.current)) {
       Alert.alert({
         title: "Correo inválido",
         description: "Por favor, ingresa un correo válido.",
@@ -76,10 +93,34 @@ const Register: React.FC = () => {
         confirmText: "Ok",
       });
       return;
-    } else if (nameRef.current) {
+    }
+
+    if (nameRef.current.length < 3) {
       Alert.alert({
-        title: "Nombre Invalido",
-        description: "Por favor, ingresa un nombre de usuario correcto.",
+        title: "Nombre inválido",
+        description: "El nombre de usuario debe tener al menos 3 caracteres.",
+        icon: "error",
+        iconColor: "orange",
+        confirmText: "Ok",
+      });
+      return;
+    }
+
+    if (passwordRef.current.length < 6) {
+      Alert.alert({
+        title: "Contraseña muy corta",
+        description: "La contraseña debe tener al menos 6 caracteres.",
+        icon: "error",
+        iconColor: "orange",
+        confirmText: "Ok",
+      });
+      return;
+    }
+
+    if (!isPhoneValid(phoneRef.current)) {
+      Alert.alert({
+        title: "Teléfono inválido",
+        description: "Por favor, ingresa un número de teléfono válido.",
         icon: "error",
         iconColor: "orange",
         confirmText: "Ok",
@@ -89,23 +130,46 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simular proceso de autenticación
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const userData = {
+        nombre_usuario: nameRef.current.trim(),
+        email: emailRef.current.trim().toLowerCase(),
+        password: passwordRef.current,
+        telefono: phoneRef.current.trim(),
+      };
 
-      // Login exitoso
+      await createUser(userData);
+
+      // Registro exitoso
       Alert.alert({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido de vuelta!",
+        title: "¡Cuenta creada exitosamente!",
+        description: "Tu cuenta ha sido registrada. Ahora puedes iniciar sesión.",
         icon: "success",
         confirmText: "Continuar",
       });
 
-      // Navegar al dashboard o pantalla principal
-      // router.push("/dashboard");
+      // Navegar al login después de un breve delay
+      setTimeout(() => {
+        router.push("/(auth)/Login");
+      }, 1500);
+
     } catch (error) {
+      console.error("Error al crear usuario:", error);
+      
+      let errorMessage = "Ocurrió un error inesperado. Intenta de nuevo.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("duplicate") || error.message.includes("already exists")) {
+          errorMessage = "Este correo o nombre de usuario ya está registrado.";
+        } else if (error.message.includes("validación")) {
+          errorMessage = "Por favor, verifica que todos los datos sean correctos.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       Alert.alert({
-        title: "Error de login",
-        description: "Credenciales incorrectas. Intenta de nuevo.",
+        title: "Error al crear cuenta",
+        description: errorMessage,
         icon: "error",
         confirmText: "Reintentar",
       });
@@ -139,17 +203,16 @@ const Register: React.FC = () => {
           </Typo>
         </View>
 
-        {/* Formulario de login */}
+        {/* Formulario de registro */}
         <View style={styles.form}>
           <Typo size={16} color={colors.textLighter}>
-            Crea una nueva cuenta en LanaApp y asi organizas todos tus ahorros
+            Crea una nueva cuenta en LanaApp y así organizas todos tus ahorros
           </Typo>
 
           <Input
             placeholder="Enter your Name"
-            onChangeText={(value: string) => (emailRef.current = value)}
-            keyboardType="email-address"
-            autoCapitalize="none"
+            onChangeText={(value: string) => (nameRef.current = value)}
+            autoCapitalize="words"
             icon={
               <Icons.User
                 size={verticalScale(26)}
@@ -166,6 +229,19 @@ const Register: React.FC = () => {
             autoCapitalize="none"
             icon={
               <Icons.At
+                size={verticalScale(26)}
+                color={colors.neutral300}
+                weight="fill"
+              />
+            }
+          />
+
+          <Input
+            placeholder="Enter your Phone"
+            onChangeText={(value: string) => (phoneRef.current = value)}
+            keyboardType="phone-pad"
+            icon={
+              <Icons.Phone
                 size={verticalScale(26)}
                 color={colors.neutral300}
                 weight="fill"

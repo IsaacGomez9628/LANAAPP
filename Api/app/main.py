@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-# si no se encuentra el modulo router asegurarse de que este dentro de la carpeta app, sino quitar el app
+from fastapi.middleware.cors import CORSMiddleware  
 from app.router.router import router
 from app.config.db import engine, meta_data
 from app.model import users, transaccion, tokensJWTInvalido, presupuestos, prefereciasNotificacionesUsuarios, pagosProgramados, notificaciones, categorias
@@ -20,14 +20,21 @@ async def lifespan(app: FastAPI):
 
 # Instancia de FastApi
 app = FastAPI(lifespan=lifespan)
+
+# ← AGREGAR CORS MIDDLEWARE AQUÍ
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todos los orígenes (para desarrollo)
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Permite todos los headers
+)
+
 # este include_router agrega las rutas user que esta en la carpeta router en router.py
 app.include_router(router)
 
 meta_data.create_all(engine)
 
-
-
 @app.get("/")
 def root():
     return {"message": "Hola desde Lana App"}
-

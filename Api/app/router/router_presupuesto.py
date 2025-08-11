@@ -20,6 +20,7 @@ def crear_presupuesto(data: PresupuestoSchema):
     nuevo_presupuesto = data.model_dump()
     with engine.connect() as connection:
         connection.execute(presupuestos.insert().values(nuevo_presupuesto))
+        connection.commit()
     return {"mensaje": "Presupuesto creado correctamente"}
 
 @presupuesto_router.put("/lanaapp/presupuesto/{presupuesto_id}", tags=["Presupuesto"])
@@ -31,6 +32,7 @@ def actualizar_presupuesto(presupuesto_id: int, data: PresupuestoSchema):
             .where(presupuestos.c.id == presupuesto_id)
             .values(valores)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Presupuesto no encontrado")
     return {"mensaje": "Presupuesto actualizado correctamente"}
@@ -41,6 +43,7 @@ def eliminar_presupuesto(presupuesto_id: int):
         result = connection.execute(
             presupuestos.delete().where(presupuestos.c.id == presupuesto_id)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Presupuesto no encontrado")
     return {"mensaje": "Presupuesto eliminado correctamente"}
