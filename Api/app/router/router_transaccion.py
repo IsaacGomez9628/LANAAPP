@@ -21,6 +21,7 @@ def create_transaccion(data: TransaccionSchema):
     nueva_transaccion = data.model_dump()
     with engine.connect() as connection:
         connection.execute(transacciones.insert().values(nueva_transaccion))
+        connection.commit()
     return {"mensaje": "Transacción creada correctamente"}
 
 @transaccion_router.get("/lanaapp/transactions/{transaction_id}", response_model=TransaccionSchemaOut, tags=["Transacciones"])
@@ -40,6 +41,7 @@ def update_transaccion(transaction_id: int, data: TransaccionSchema):
             .where(transacciones.c.id == transaction_id)
             .values(valores)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Transacción no encontrada")
     return {"mensaje": "Transacción actualizada correctamente"}
@@ -50,6 +52,7 @@ def delete_transaccion(transaction_id: int):
         result = connection.execute(
             transacciones.delete().where(transacciones.c.id == transaction_id)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Transacción no encontrada")
     return {"mensaje": "Transacción eliminada correctamente"}

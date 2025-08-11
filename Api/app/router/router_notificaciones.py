@@ -26,6 +26,7 @@ def crear_notificacion(data: NotificacionSchema):
     valores = data.model_dump()
     with engine.connect() as connection:
         connection.execute(notificaciones.insert().values(valores))
+        connection.commit()
     return {"mensaje": "Notificación creada"}
 
 @notificaciones_router.get("/lanaapp/notificaciones/{notificacion_id}", response_model=NotificacionSchemaOut, tags=["Notificaciones"])
@@ -47,6 +48,7 @@ def actualizar_notificacion(notificacion_id: int, data: NotificacionSchema):
             .where(notificaciones.c.id == notificacion_id)
             .values(valores)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No encontrada")
     return {"mensaje": "Notificación actualizada"}
@@ -57,6 +59,7 @@ def eliminar_notificacion(notificacion_id: int):
         result = connection.execute(
             notificaciones.delete().where(notificaciones.c.id == notificacion_id)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No encontrada")
     return {"mensaje": "Notificación eliminada"}
@@ -69,6 +72,7 @@ def marcar_como_leida(notificacion_id: int):
             .where(notificaciones.c.id == notificacion_id)
             .values(leida=1)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No encontrada")
     return {"mensaje": "Notificación marcada como leída"}
@@ -81,6 +85,7 @@ def marcar_como_leida(notificacion_id: int):
             .where(notificaciones.c.id == notificacion_id)
             .values(leida=1)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No encontrada")
     return {"mensaje": "Notificación marcada como leída"}
@@ -93,6 +98,7 @@ def marcar_todas_como_leidas(usuario_id: int):
             .where(notificaciones.c.usuario_id == usuario_id)
             .values(leida=1)
         )
+        connection.commit()
         if result.rowcount == 0:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No hay notificaciones para actualizar")
     return {"mensaje": f"Se marcaron {result.rowcount} notificaciones como leídas"}
