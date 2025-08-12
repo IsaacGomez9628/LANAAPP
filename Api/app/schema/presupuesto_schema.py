@@ -1,3 +1,4 @@
+# app/schema/presupuesto_schema.py
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -7,7 +8,7 @@ class PresupuestoSchema(BaseModel):
     categoria_id: int
     monto_presupuestado: float
     mes: int
-    anio: int
+    anio: int  # Asegúrate de que sea 'anio' sin tilde
 
 class PresupuestoSchemaOut(PresupuestoSchema):
     id: int

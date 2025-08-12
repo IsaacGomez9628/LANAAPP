@@ -13,37 +13,38 @@ presupuesto_router = APIRouter()
 def obtener_presupuestos():
     with engine.connect() as connection:
         result = connection.execute(presupuestos.select()).fetchall()
-        return result
+        # Convertir a diccionarios para que coincida con el schema
+        return [dict(row._mapping) for row in result]
 
 @presupuesto_router.post("/lanaapp/presupuesto", status_code=HTTP_201_CREATED, tags=["Presupuesto"])
 def crear_presupuesto(data: PresupuestoSchema):
     nuevo_presupuesto = data.model_dump()
     with engine.connect() as connection:
-        connection.execute(presupuestos.insert().values(nuevo_presupuesto))
-        connection.commit()
+        with connection.begin():  # Usar transacción explícita
+            connection.execute(presupuestos.insert().values(nuevo_presupuesto))
     return {"mensaje": "Presupuesto creado correctamente"}
 
 @presupuesto_router.put("/lanaapp/presupuesto/{presupuesto_id}", tags=["Presupuesto"])
 def actualizar_presupuesto(presupuesto_id: int, data: PresupuestoSchema):
     valores = data.model_dump()
     with engine.connect() as connection:
-        result = connection.execute(
-            presupuestos.update()
-            .where(presupuestos.c.id == presupuesto_id)
-            .values(valores)
-        )
-        connection.commit()
-        if result.rowcount == 0:
-            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Presupuesto no encontrado")
+        with connection.begin():  # Usar transacción explícita
+            result = connection.execute(
+                presupuestos.update()
+                .where(presupuestos.c.id == presupuesto_id)
+                .values(valores)
+            )
+            if result.rowcount == 0:
+                raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Presupuesto no encontrado")
     return {"mensaje": "Presupuesto actualizado correctamente"}
 
 @presupuesto_router.delete("/lanaapp/presupuesto/{presupuesto_id}", tags=["Presupuesto"])
 def eliminar_presupuesto(presupuesto_id: int):
     with engine.connect() as connection:
-        result = connection.execute(
-            presupuestos.delete().where(presupuestos.c.id == presupuesto_id)
-        )
-        connection.commit()
-        if result.rowcount == 0:
-            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Presupuesto no encontrado")
+        with connection.begin():  # Usar transacción explícita
+            result = connection.execute(
+                presupuestos.delete().where(presupuestos.c.id == presupuesto_id)
+            )
+            if result.rowcount == 0:
+                raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Presupuesto no encontrado")
     return {"mensaje": "Presupuesto eliminado correctamente"}

@@ -1,3 +1,4 @@
+# app/model/pagosProgramados.py
 from sqlalchemy import Table, Column, Integer, String, DECIMAL, Date, Enum, TIMESTAMP, ForeignKey
 from sqlalchemy.sql import func
 from app.config.db import meta_data
