@@ -65,17 +65,17 @@ export type BackButtonProps = {
   iconSize?: number;
 };
 
-export type TransactionType = {
-  id?: string;
-  type: string;
-  amount: number;
-  category?: string;
-  date: Date | Timestamp | string;
-  description?: string;
-  image?: any;
-  uid?: string;
-  walletId: string;
-};
+// export type TransactionType = {
+//   id?: string;
+//   type: string;
+//   amount: number;
+//   category?: string;
+//   date: Date | Timestamp | string;
+//   description?: string;
+//   image?: any;
+//   uid?: string;
+//   walletId: string;
+// };
 
 export type CategoryType = {
   label: string;
@@ -169,3 +169,66 @@ export type WalletType = {
   uid?: string;
   created?: Date;
 };
+
+// ========== AGREGAR ESTOS TIPOS A TU ARCHIVO types.ts EXISTENTE ==========
+
+// Tipos para el manejo de transacciones
+export type TransactionType = "income" | "expense" | "transfer";
+export type TabType =
+  | "daily"
+  | "calendar"
+  | "monthly"
+  | "summary"
+  | "description";
+export type ImportanceType = "high" | "medium" | "low";
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  date: Date;
+  description: string;
+  importance: ImportanceType;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+}
+
+export interface ChartDataPoint {
+  name: string;
+  amount: number;
+  color: string;
+  legendFontColor: string;
+  legendFontSize: number;
+}
+
+export interface Totals {
+  income: number;
+  expenses: number;
+  total: number;
+}
+
+export interface MonthlyData {
+  month: string;
+  income: number;
+  expenses: number;
+  savings: number;
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: Date;
+  monthlyTarget: number;
+  color: string;
+  category: string;
+  priority: "high" | "medium" | "low";
+  isActive: boolean;
+}

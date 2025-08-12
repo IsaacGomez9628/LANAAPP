@@ -14,7 +14,7 @@ const Index = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push("/(auth)/Welcome");
+      router.push("/(tabs)");
     }, 3000); // Duración de la animación de carga (3 segundos)
 
     return () => clearTimeout(timeout);
