@@ -226,7 +226,8 @@ const AddMoneyModal: React.FC<AddMoneyModalProps> = ({
   );
 };
 
-export default { AddMoneyModal };
+// ✅ CORRECTO: Export por defecto del componente
+export default AddMoneyModal;
 
 const styles = StyleSheet.create({
   // Shared modal styles

@@ -6,6 +6,7 @@ import Animated, {
   withSpring,
   withTiming,
   interpolate,
+  FadeInUp,
 } from "react-native-reanimated";
 import { colors, radius, spacingX, spacingY } from "@/constants/theme";
 import Typo from "./Typo";
@@ -37,23 +38,15 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const animationProgress = useSharedValue(0);
   const scale = useSharedValue(0.8);
-  const opacity = useSharedValue(0);
 
   useEffect(() => {
     setTimeout(() => {
       animationProgress.value = withTiming(value, { duration: 1000 });
       scale.value = withSpring(1, { damping: 10, stiffness: 100 });
-      opacity.value = withTiming(1, { duration: 500 });
     }, delay);
   }, [value, delay]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-      opacity: opacity.value,
-    };
-  });
-
+  // Separar las animaciones: una para el contenedor (layout) y otra para el valor
   const animatedValueStyle = useAnimatedStyle(() => {
     const displayValue = Math.round(animationProgress.value);
     return {
@@ -76,7 +69,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
   const IconComponent = icon ? Icons[icon] : null;
 
   return (
-    <Animated.View style={[styles.container, style, animatedStyle]}>
+    <Animated.View
+      entering={FadeInUp.delay(delay).springify()}
+      style={[styles.container, style]}
+    >
       <View style={styles.header}>
         {IconComponent && (
           <View
@@ -94,6 +90,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
         </Typo>
       </View>
 
+      {/* Aplicar animación de escala solo al valor, no opacity */}
       <Animated.View style={animatedValueStyle}>
         <Typo size={24} fontWeight="700" color={color}>
           {prefix}
