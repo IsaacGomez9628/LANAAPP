@@ -220,15 +220,86 @@ export interface MonthlyData {
   savings: number;
 }
 
+// Budget
+// LanaApp/types/budget.ts
+export interface Budget {
+  id: string;
+  category: string;
+  amount: number;
+  spent: number;
+  color: string;
+  period: "monthly" | "weekly" | "daily";
+}
+
 export interface SavingsGoal {
   id: string;
   name: string;
   targetAmount: number;
   currentAmount: number;
   deadline: Date;
-  monthlyTarget: number;
-  color: string;
   category: string;
   priority: "high" | "medium" | "low";
+  color: string;
+  description: string;
   isActive: boolean;
+  monthlyTarget: number;
+}
+
+export interface RecurringPayment {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  frequency: "daily" | "weekly" | "monthly" | "yearly";
+  nextPayment: Date;
+  isActive: boolean;
+  color: string;
+}
+
+export interface BudgetAnalysis {
+  budget: Budget;
+  usage: number;
+  remaining: number;
+  status: "good" | "warning" | "exceeded";
+}
+
+export interface FinancialSummary {
+  totalIncome: number;
+  totalExpenses: number;
+  totalSavings: number;
+  netBalance: number;
+  budgetUsage: number;
+  savingsRate: number;
+}
+
+export interface CategoryExpense {
+  category: string;
+  amount: number;
+  color: string;
+  percentage: number;
+}
+
+export interface Expense {
+  id: string;
+  amount: number;
+  category: string;
+  description: string;
+  date: Date;
+  type: "planned" | "recurring" | "manual";
+}
+
+export interface MonthlyTotals {
+  income: number;
+  expenses: number;
+  total: number;
+  count?: number;
+  averageExpense?: number;
+}
+
+export interface ReportData {
+  transactions: Transaction[];
+  budgets: any[];
+  savingsGoals: SavingsGoal[];
+  currentBalance: number;
+  period: "week" | "month" | "quarter" | "year";
 }

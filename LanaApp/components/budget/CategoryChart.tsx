@@ -3,9 +3,18 @@ import { View, ScrollView, StyleSheet, Dimensions } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import Typo from "@/components/Typo";
 import { colors, radius, spacingX, spacingY } from "@/constants/theme";
-import { Budget } from "@/types/budget";
 
 const { width: screenWidth } = Dimensions.get("window");
+
+// Definir el tipo localmente ya que no existe el archivo types/budget
+interface Budget {
+  id: string;
+  category: string;
+  amount: number;
+  spent: number;
+  color: string;
+  period: "monthly" | "weekly" | "daily";
+}
 
 interface CategoryChartProps {
   budgets: Budget[];

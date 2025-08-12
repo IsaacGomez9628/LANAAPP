@@ -12,7 +12,7 @@ import Modal from "react-native-modal";
 import * as Icons from "phosphor-react-native";
 import { verticalScale } from "react-native-size-matters";
 import Typo from "@/components/Typo";
-import DateSelector from "@/components/DataSelector";
+import DateSelector from "@/components/DateSelector";
 import { colors, radius, spacingX, spacingY } from "@/constants/theme";
 import { CATEGORIES } from "@/constants/transactions";
 
