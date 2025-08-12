@@ -7,9 +7,8 @@ import { colors, spacingX, spacingY } from "@/constants/theme";
 import { useRouter } from "expo-router";
 import * as Icons from "phosphor-react-native";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, Alert } from "react-native";
 import { verticalScale } from "react-native-size-matters";
-import { Alert } from "rn-custom-alert-prompt";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Cambia esta IP por la IP donde corre tu API
@@ -28,38 +27,31 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (): Promise<void> => {
     if (!passwordRef.current || !emailRef.current) {
-      Alert.alert({
-        title: "Faltan datos",
-        description: "Por favor, ingresa tu correo o contraseña",
-        showCancelButton: true,
-        icon: "error",
-        iconColor: colors.neutral300,
-        cancelText: "Cancelar",
-        confirmText: "Entendido",
-      });
+      Alert.alert(
+        "Faltan datos",
+        "Por favor, ingresa tu correo o contraseña",
+        [{ text: "Entendido" }]
+      );
       return;
     }
 
     if (!isEmailValid(emailRef.current)) {
-      Alert.alert({
-        title: "Correo inválido",
-        description: "Por favor, ingresa un correo válido.",
-        icon: "error",
-        iconColor: "orange",
-        confirmText: "Ok",
-      });
+      Alert.alert(
+        "Correo inválido",
+        "Por favor, ingresa un correo válido.",
+        [{ text: "Ok" }]
+      );
       return;
     }
 
     setLoading(true);
     try {
-      console.log('Intentando login con:', emailRef.current);
+      console.log("Intentando login con:", emailRef.current);
 
-      // Usar JSON en lugar de form-urlencoded
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
+        headers: {
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           email: emailRef.current.toLowerCase().trim(),
@@ -67,7 +59,7 @@ const Login: React.FC = () => {
         }),
       });
 
-      console.log('Status de respuesta:', response.status);
+      console.log("Status de respuesta:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -75,44 +67,38 @@ const Login: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('Respuesta exitosa:', data);
+      console.log("Respuesta exitosa:", data);
 
-      // Guardar tanto el token como los datos del usuario
       await AsyncStorage.setItem("access_token", data.access_token);
       await AsyncStorage.setItem("user_data", JSON.stringify(data.user));
 
-      Alert.alert({
-        title: "Inicio de sesión exitoso",
-        description: `¡Bienvenido de vuelta, ${data.user.nombre_usuario}!`,
-        icon: "success",
-        confirmText: "Continuar",
-        onConfirm: () => {
-          router.push("/(tabs)");
-        },
-      });
+      Alert.alert(
+        "Inicio de sesión exitoso",
+        `¡Bienvenido de vuelta, ${data.user.nombre_usuario}!`,
+        [{ text: "Continuar", onPress: () => router.push("/(tabs)") }]
+      );
 
     } catch (error: any) {
-      console.error('Error en login:', error);
-      Alert.alert({
-        title: "Error de login",
-        description: error.message || "Credenciales incorrectas. Intenta de nuevo.",
-        icon: "error",
-        confirmText: "Reintentar",
-      });
+      console.error("Error en login:", error);
+      Alert.alert(
+        "Error de login",
+        error.message || "Credenciales incorrectas. Intenta de nuevo.",
+        [{ text: "Reintentar" }]
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleForgotPassword = (): void => {
-    Alert.alert({
-      title: "Recuperar contraseña",
-      description: "¿Deseas recuperar tu contraseña?",
-      showCancelButton: true,
-      icon: "question",
-      cancelText: "Cancelar",
-      confirmText: "Sí, recuperar",
-    });
+    Alert.alert(
+      "Recuperar contraseña",
+      "¿Deseas recuperar tu contraseña?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Sí, recuperar" }
+      ]
+    );
   };
 
   return (
